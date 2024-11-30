@@ -1,0 +1,165 @@
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+class Expense {
+    String category;
+    String description;
+    double amount;
+
+    public Expense(String category, String description, double amount) {
+        this.category = category;
+        this.description = description;
+        this.amount = amount;
+    }
+
+    @Override
+    public String toString() {
+        return "Category: " + category + ", Description: " + description + ", Amount: $" + amount;
+    }
+}
+
+public class ExpenseTracker extends Frame {
+    private ArrayList<Expense> expenses = new ArrayList<>();
+    private double budget = 0.0;
+
+    private TextArea displayArea;
+    private TextField categoryField, descriptionField, amountField, budgetField;
+
+    public ExpenseTracker() {
+        setTitle("Expense Tracker");
+        setSize(500, 600);
+        setLayout(new FlowLayout());
+        setResizable(false);
+
+        Label titleLabel = new Label("Expense Tracker");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        add(titleLabel);
+
+        // Add Expense Section
+        add(new Label("Category:"));
+        categoryField = new TextField(15);
+        add(categoryField);
+
+        add(new Label("Description:"));
+        descriptionField = new TextField(15);
+        add(descriptionField);
+
+        add(new Label("Amount:"));
+        amountField = new TextField(10);
+        add(amountField);
+
+        Button addExpenseButton = new Button("Add Expense");
+        add(addExpenseButton);
+
+        // Set Budget Section
+        add(new Label("Monthly Budget:"));
+        budgetField = new TextField(10);
+        add(budgetField);
+
+        Button setBudgetButton = new Button("Set Budget");
+        add(setBudgetButton);
+
+        // View Summary Section
+        Button viewExpensesButton = new Button("View Expenses");
+        add(viewExpensesButton);
+
+        Button viewSummaryButton = new Button("View Spending Summary");
+        add(viewSummaryButton);
+
+        // Display Area
+        displayArea = new TextArea(20, 55);
+        displayArea.setEditable(false);
+        add(displayArea);
+
+        // Event Handlers
+        addExpenseButton.addActionListener(e -> addExpense());
+        setBudgetButton.addActionListener(e -> setBudget());
+        viewExpensesButton.addActionListener(e -> viewExpenses());
+        viewSummaryButton.addActionListener(e -> viewSummary());
+
+        // Window Closing Event
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);
+            }
+        });
+    }
+
+    private void addExpense() {
+        try {
+            String category = categoryField.getText().trim();
+            String description = descriptionField.getText().trim();
+            double amount = Double.parseDouble(amountField.getText().trim());
+
+            if (category.isEmpty() || description.isEmpty()) {
+                displayArea.setText("Error: Category and Description cannot be empty!");
+                return;
+            }
+
+            expenses.add(new Expense(category, description, amount));
+            displayArea.setText("Expense added successfully!");
+
+            categoryField.setText("");
+            descriptionField.setText("");
+            amountField.setText("");
+        } catch (NumberFormatException e) {
+            displayArea.setText("Error: Please enter a valid amount.");
+        }
+    }
+
+    private void setBudget() {
+        try {
+            budget = Double.parseDouble(budgetField.getText().trim());
+            displayArea.setText("Budget set to $" + budget);
+            budgetField.setText("");
+        } catch (NumberFormatException e) {
+            displayArea.setText("Error: Please enter a valid budget.");
+        }
+    }
+
+    private void viewExpenses() {
+        if (expenses.isEmpty()) {
+            displayArea.setText("No expenses recorded yet.");
+        } else {
+            StringBuilder sb = new StringBuilder("=== Recorded Expenses ===\n");
+            for (Expense expense : expenses) {
+                sb.append(expense).append("\n");
+            }
+            displayArea.setText(sb.toString());
+        }
+    }
+
+    private void viewSummary() {
+        if (expenses.isEmpty()) {
+            displayArea.setText("No expenses to summarize.");
+            return;
+        }
+
+        HashMap<String, Double> categorySummary = new HashMap<>();
+        double totalSpent = 0.0;
+
+        for (Expense expense : expenses) {
+            categorySummary.put(expense.category, categorySummary.getOrDefault(expense.category, 0.0) + expense.amount);
+            totalSpent += expense.amount;
+        }
+
+        StringBuilder sb = new StringBuilder("=== Spending Summary ===\n");
+        for (String category : categorySummary.keySet()) {
+            sb.append(category).append(": $").append(categorySummary.get(category)).append("\n");
+        }
+        sb.append("Total Spent: $").append(totalSpent).append("\n");
+        if (budget > 0) {
+            sb.append("Remaining Budget: $").append(budget - totalSpent).append("\n");
+            if (totalSpent > budget) {
+                sb.append("Warning: You have exceeded your budget!");
+            }
+        }
+        displayArea.setText(sb.toString());
+    }
+
+    public static void main(String[] args) {
+        new ExpenseTracker().setVisible(true);
+    }
+}
